@@ -62,6 +62,23 @@ def calc_vec(pos_tokens, neg_tokens, n_model, dim):
         vec -= get_vec(n_model,dim,n)
     
     return vec 
+
+def calc_train_vec(pos_tokens, n_model, dim):
+    vec = np.zeros(dim)
+    for p in pos_tokens:
+        vec += get_train_vec(n_model,dim,p,pos_tokens)
+    
+    return vec 
+
+def get_train_vec(n_model,dim, token , pos_tokens):
+    vec = np.zeros(dim)
+    if token not in n_model.wv:
+         n_model.train(pos_tokens, total_examples=n_model.corpus_count, epochs=n_model.epochs)
+         vec = n_model.wv[token]
+    else:
+        vec = n_model.wv[token]
+    return vec
+
 ## -- Retrieve all ngrams for a text in between a specific range
 def get_all_ngrams(text, nrange=3):
     text = re.sub(r'[\,\.\;\(\)\[\]\_\+\#\@\!\?\؟\^]', ' ', text)

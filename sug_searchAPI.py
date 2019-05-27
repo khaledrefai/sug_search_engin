@@ -50,14 +50,14 @@ app = Flask(__name__)
 @app.route('/search', methods=['GET'])
 def search(): 
     pos_srch = request.args.get('pos_srch')        
-    neg_srch = request.args.get('neg_srch')        
+    #neg_srch = request.args.get('neg_srch')        
     
     pos_srch = cleantxt.clean_str(pos_srch)
     pos_srch = gensim.utils.simple_preprocess(pos_srch)
     
-    neg_srch = cleantxt.clean_str(neg_srch)
-    neg_srch = gensim.utils.simple_preprocess(neg_srch)
-    
+    #neg_srch = cleantxt.clean_str(neg_srch)
+    #neg_srch = gensim.utils.simple_preprocess(neg_srch)
+    neg_srch=['']
     srch =  cleantxt.calc_vec(pos_tokens=pos_srch, neg_tokens=neg_srch, n_model=model, dim=model.vector_size)
     result = []    
     # query for the nearest neighbours of the first datapoint
@@ -67,6 +67,24 @@ def search():
                      data.loc[data['S_ID'] ==  id]['TITLE'].values[0] ])  
     print(result)  
     return  json.dumps(result, ensure_ascii=False)
+
+@app.route('/add', methods=['GET'])
+def add(): 
+    sug_id = int (request.args.get('sug_id') )
+    sig_title=  request.args.get('sig_title') 
+    #neg_srch = request.args.get('neg_srch')        
+    
+    sig_title_vec = cleantxt.clean_str(sig_title)
+    sig_title_vec = gensim.utils.simple_preprocess(sig_title)
+    sig_title_vec =  cleantxt.calc_train_vec(pos_tokens=sig_title_vec, n_model=model, dim=model.vector_size)
+    model.clear_sims()
+    index.addDataPoint(sug_id , sig_title_vec)
+    M = 70
+    efC = 300
+    num_threads = 4
+    index_time_params = {'M': M, 'indexThreadQty': num_threads, 'efConstruction': efC, 'post' : 2}
+    index.createIndex(index_time_params, print_progress=True)
+    return  json.dumps("done", ensure_ascii=False)
 
 
 
@@ -78,6 +96,3 @@ if __name__ == "__main__":
     print ("Serving ...",  app.run(host='0.0.0.0'))
     print ("Finished !")
     print ("Done !")
-    
-
-
